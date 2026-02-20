@@ -1,0 +1,106 @@
+postgres=# CREATE DATABASE sales_db;
+CREATE DATABASE
+postgres=# \c sales_db
+You are now connected to database "sales_db" as user "postgres".
+sales_db=# CREATE TABLE online_sales (
+sales_db(#     order_id INT,
+sales_db(#     order_date DATE,
+sales_db(#     amount DECIMAL(10,2),
+sales_db(#     product_id INT
+sales_db(# select *from online_sales;
+sales_db(# )
+sales_db-# ;
+ERROR:  syntax error at or near "select"
+LINE 6: select *from online_sales;
+        ^
+sales_db=# CREATE TABLE online_sales (
+sales_db(#     order_id INT,
+sales_db(#     order_date DATE,
+sales_db(#     amount DECIMAL(10,2),
+sales_db(#     product_id INT
+sales_db(# );
+CREATE TABLE
+sales_db=# INSERT INTO online_sales VALUES
+sales_db-# (1, '2022-01-05', 200.00, 101),
+sales_db-# (2, '2022-01-10', 150.00, 102),
+sales_db-# (3, '2022-02-15', 300.00, 103),
+sales_db-# (4, '2022-02-20', 250.00, 101),
+sales_db-# (5, '2022-03-05', 400.00, 104),
+sales_db-# (6, '2022-03-10', 350.00, 105);
+INSERT 0 6
+sales_db=# SELECT * FROM online_sales;
+ order_id | order_date | amount | product_id 
+----------+------------+--------+------------
+        1 | 2022-01-05 | 200.00 |        101
+        2 | 2022-01-10 | 150.00 |        102
+        3 | 2022-02-15 | 300.00 |        103
+        4 | 2022-02-20 | 250.00 |        101
+        5 | 2022-03-05 | 400.00 |        104
+        6 | 2022-03-10 | 350.00 |        105
+(6 rows)
+
+sales_db=# SELECT
+sales_db-#     EXTRACT(YEAR FROM order_date) AS year,
+sales_db-#     EXTRACT(MONTH FROM order_date) AS month,
+sales_db-#     SUM(amount) AS total_revenue,
+sales_db-#     COUNT(DISTINCT order_id) AS total_orders
+sales_db-# FROM online_sales
+sales_db-# GROUP BY
+sales_db-#     EXTRACT(YEAR FROM order_date),
+sales_db-#     EXTRACT(MONTH FROM order_date)
+sales_db-# ORDER BY
+sales_db-#     year,
+sales_db-#     month;
+ year | month | total_revenue | total_orders 
+------+-------+---------------+--------------
+ 2022 |     1 |        350.00 |            2
+ 2022 |     2 |        550.00 |            2
+ 2022 |     3 |        750.00 |            2
+(3 rows)
+
+sales_db=# SELECT
+sales_db-#     EXTRACT(YEAR FROM order_date) AS year,
+sales_db-#     EXTRACT(MONTH FROM order_date) AS month,
+sales_db-#     SUM(amount) AS total_revenue,
+sales_db-#     COUNT(DISTINCT order_id) AS total_orders
+sales_db-# FROM online_sales
+sales_db-# WHERE EXTRACT(YEAR FROM order_date) = 2022
+sales_db-# GROUP BY
+sales_db-#     EXTRACT(YEAR FROM order_date),
+sales_db-#     EXTRACT(MONTH FROM order_date)
+sales_db-# ORDER BY year, month;
+ year | month | total_revenue | total_orders 
+------+-------+---------------+--------------
+ 2022 |     1 |        350.00 |            2
+ 2022 |     2 |        550.00 |            2
+ 2022 |     3 |        750.00 |            2
+(3 rows)
+
+sales_db=# SELECT
+sales_db-#     EXTRACT(YEAR FROM order_date) AS year,
+sales_db-#     EXTRACT(MONTH FROM order_date) AS month,
+sales_db-#     SUM(amount) AS total_revenue,
+sales_db-#     COUNT(DISTINCT order_id) AS total_orders
+sales_db-# FROM online_sales
+sales_db-# GROUP BY
+sales_db-#     EXTRACT(YEAR FROM order_date),
+sales_db-#     EXTRACT(MONTH FROM order_date)
+sales_db-# ORDER BY total_revenue DESC
+sales_db-# LIMIT 3;
+ year | month | total_revenue | total_orders 
+------+-------+---------------+--------------
+ 2022 |     3 |        750.00 |            2
+ 2022 |     2 |        550.00 |            2
+ 2022 |     1 |        350.00 |            2
+(3 rows)
+sales_db=# \copy (select   EXTRACT(YEAR FROM order_date) AS year,
+    EXTRACT(MONTH FROM order_date) AS month,
+    SUM(amount) AS total_revenue,
+    COUNT(DISTINCT order_id) AS total_orders
+FROM online_sales
+GROUP BY
+    EXTRACT(YEAR FROM order_date),
+    EXTRACT(MONTH FROM order_date)
+ORDER BY year, month) TO 'sales_data.csv' WITH CSV HEADER;
+COPY 3
+
